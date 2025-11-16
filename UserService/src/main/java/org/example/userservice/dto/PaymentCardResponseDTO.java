@@ -1,9 +1,15 @@
 package org.example.userservice.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.io.Serializable;
 
+@Setter
+@Getter
 public class PaymentCardResponseDTO implements Serializable {
+    // Геттеры и сеттеры
     private Long id;
     private String number;
     private String holder;
@@ -31,31 +37,4 @@ public class PaymentCardResponseDTO implements Serializable {
         this.userFullName = userFullName;
     }
 
-    // Геттеры и сеттеры
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNumber() { return number; }
-    public void setNumber(String number) { this.number = number; }
-
-    public String getHolder() { return holder; }
-    public void setHolder(String holder) { this.holder = holder; }
-
-    public String getExpirationDate() { return expirationDate; }
-    public void setExpirationDate(String expirationDate) { this.expirationDate = expirationDate; }
-
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getUserFullName() { return userFullName; }
-    public void setUserFullName(String userFullName) { this.userFullName = userFullName; }
 }

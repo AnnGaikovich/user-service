@@ -25,7 +25,7 @@ services:
     image: redis:7-alpine
     container_name: user-service-redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     networks:
       - user-service-network
     healthcheck:

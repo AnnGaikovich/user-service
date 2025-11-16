@@ -1,4 +1,3 @@
-// src/main/java/com/example/app/entity/User.java
 package org.example.userservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -7,6 +6,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.example.userservice.exception.BusinessRuleException;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,11 +18,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
+    public static final int MAX_PAYMENT_CARDS = 5;
+
+    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -80,38 +87,10 @@ public class User {
         return new UserBuilder();
     }
 
-    // Геттеры и сеттеры
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getSurname() { return surname; }
-    public void setSurname(String surname) { this.surname = surname; }
-
-    public LocalDate getBirthDate() { return birthDate; }
-    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public List<PaymentCard> getPaymentCards() { return paymentCards; }
-    public void setPaymentCards(List<PaymentCard> paymentCards) { this.paymentCards = paymentCards; }
-
-    // Ограничение: не более 5 карт
+    // Не более MAX_PAYMENT_CARDS карт
     public void addPaymentCard(PaymentCard card) {
-        if (paymentCards.size() >= 5) {
-            throw new IllegalStateException("User cannot have more than 5 payment cards");
+        if (paymentCards.size() >= MAX_PAYMENT_CARDS) {
+            throw new BusinessRuleException("User cannot have more than " + MAX_PAYMENT_CARDS + " payment cards");
         }
         paymentCards.add(card);
         card.setUser(this);

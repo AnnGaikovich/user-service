@@ -8,8 +8,6 @@ import org.example.userservice.exception.BusinessRuleException;
 import org.example.userservice.mapper.UserMapper;
 import org.example.userservice.repository.UserRepository;
 import org.example.userservice.specification.UserSpecifications;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,7 +24,7 @@ public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
+    private final UserMapper userMapper; // MapStruct маппер
 
     public UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
@@ -42,10 +40,13 @@ public class UserService {
             throw new BusinessRuleException("User with email " + userRequestDTO.getEmail() + " already exists");
         }
 
+        // MapStruct автоматически создает сущность из DTO
         User user = userMapper.toEntity(userRequestDTO);
         User savedUser = userRepository.save(user);
 
         log.info("Created user with ID: {}", savedUser.getId());
+
+        // MapStruct автоматически создает ResponseDTO из сущности
         return userMapper.toResponseDTO(savedUser);
     }
 
@@ -54,16 +55,20 @@ public class UserService {
         log.info("Fetching user by ID: {} from database", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        // MapStruct автоматически маппит все поля включая paymentCards
         return userMapper.toResponseDTO(user);
     }
 
     @Cacheable(value = "users", key = "'all'")
-    public Page<UserResponseDTO> getAllUsers(Pageable pageable, String firstName, String surname) {
-        log.info("Fetching users with filters - firstName: {}, surname: {} from database", firstName, surname);
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable, String name, String surname) {
+        log.info("Fetching users with filters - name: {}, surname: {} from database", name, surname);
 
-        Specification<User> spec = UserSpecifications.withFilters(firstName, surname);
+        Specification<User> spec = UserSpecifications.withFilters(name, surname);
         Page<User> usersPage = userRepository.findAll(spec, pageable);
 
+        log.info("Found {} users with given filters", usersPage.getTotalElements());
+        // MapStruct автоматически конвертирует Page<User> в Page<UserResponseDTO>
         return usersPage.map(userMapper::toResponseDTO);
     }
 
@@ -83,6 +88,7 @@ public class UserService {
             throw new BusinessRuleException("Email " + userRequestDTO.getEmail() + " is already taken");
         }
 
+        // Обновляем поля вручную, так как MapStruct создает новую сущность
         existingUser.setName(userRequestDTO.getName());
         existingUser.setSurname(userRequestDTO.getSurname());
         existingUser.setBirthDate(userRequestDTO.getBirthDate());

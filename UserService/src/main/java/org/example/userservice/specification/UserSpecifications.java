@@ -9,14 +9,14 @@ import java.util.List;
 
 public class UserSpecifications {
 
-    public static Specification<User> withFilters(String firstName, String surname) {
+    public static Specification<User> withFilters(String name, String surname) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (StringUtils.hasText(firstName)) {
+            if (StringUtils.hasText(name)) {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("name")),
-                        "%" + firstName.toLowerCase() + "%"
+                        "%" + name.toLowerCase() + "%"
                 ));
             }
 
@@ -31,8 +31,4 @@ public class UserSpecifications {
         };
     }
 
-    public static Specification<User> isActive() {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("active"), true);
-    }
 }

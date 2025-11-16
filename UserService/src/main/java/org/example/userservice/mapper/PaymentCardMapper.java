@@ -3,60 +3,34 @@ package org.example.userservice.mapper;
 import org.example.userservice.dto.PaymentCardRequestDTO;
 import org.example.userservice.dto.PaymentCardResponseDTO;
 import org.example.userservice.entity.PaymentCard;
-import org.example.userservice.entity.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+@Mapper(componentModel = "spring")
 @Component
-public class PaymentCardMapper {
+public interface PaymentCardMapper {
 
-    public PaymentCard toEntity(PaymentCardRequestDTO paymentCardRequestDTO) {
-        if (paymentCardRequestDTO == null) {
-            return null;
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    PaymentCard toEntity(PaymentCardRequestDTO paymentCardRequestDTO);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "number", source = "number", qualifiedByName = "maskCardNumber")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userFullName", expression = "java(paymentCard.getUser().getName() + \" \" + paymentCard.getUser().getSurname())")
+    PaymentCardResponseDTO toResponseDTO(PaymentCard paymentCard);
+
+    @Named("maskCardNumber")
+    default String maskCardNumber(String cardNumber) {
+        if (cardNumber == null || cardNumber.length() < 12) {
+            return cardNumber;
         }
-
-        PaymentCard paymentCard = new PaymentCard();
-        paymentCard.setNumber(paymentCardRequestDTO.getNumber());
-        paymentCard.setHolder(paymentCardRequestDTO.getHolder());
-        paymentCard.setExpirationDate(paymentCardRequestDTO.getExpirationDate());
-        paymentCard.setActive(paymentCardRequestDTO.getActive());
-
-        // Обработка userIdToUser
-        if (paymentCardRequestDTO.getUserId() != null) {
-            User user = new User();
-            user.setId(paymentCardRequestDTO.getUserId());
-            paymentCard.setUser(user);
-        }
-
-        return paymentCard;
-    }
-
-    public PaymentCardResponseDTO toResponseDTO(PaymentCard paymentCard) {
-        if (paymentCard == null) {
-            return null;
-        }
-
-        PaymentCardResponseDTO dto = new PaymentCardResponseDTO();
-        dto.setId(paymentCard.getId());
-        dto.setNumber(paymentCard.getNumber());
-        dto.setHolder(paymentCard.getHolder());
-        dto.setExpirationDate(paymentCard.getExpirationDate());
-        dto.setActive(paymentCard.getActive());
-        dto.setCreatedAt(paymentCard.getCreatedAt());
-        dto.setUpdatedAt(paymentCard.getUpdatedAt());
-
-        if (paymentCard.getUser() != null) {
-            dto.setUserId(paymentCard.getUser().getId());
-            dto.setUserFullName(userToFullName(paymentCard.getUser()));
-        }
-
-        return dto;
-    }
-
-    private String userToFullName(User user) {
-        if (user == null) return null;
-        return user.getName() + " " + user.getSurname();
+        String firstFour = cardNumber.substring(0, 4);
+        String lastFour = cardNumber.substring(cardNumber.length() - 4);
+        return firstFour + "********" + lastFour;
     }
 }

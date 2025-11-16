@@ -1,29 +1,41 @@
 package org.example.userservice.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Setter
+@Getter
+@Schema(description = "Payment card creation and update request")
 public class PaymentCardRequestDTO implements Serializable {
 
+    @Schema(description = "ID of the user who owns the card", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "User ID is mandatory")
     private Long userId;
 
+    @Schema(description = "Card number (16-19 digits)", example = "4111111111111111", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Card number is mandatory")
     @Pattern(regexp = "^[0-9]{16,19}$", message = "Card number must contain 16-19 digits")
     private String number;
 
+    @Schema(description = "Card holder name", example = "JOHN DOE", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Card holder is mandatory")
     private String holder;
 
+    @Schema(description = "Expiration date in MM/YY format", example = "12/25", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Expiration date is mandatory")
     @Pattern(regexp = "^(0[1-9]|1[0-2])/[0-9]{2}$", message = "Expiration date must be in format MM/YY")
     private String expirationDate;
 
+    @Schema(description = "Whether the card is active", example = "true")
     private Boolean active = true;
 
-    // Конструкторы
+    // Конструкторы остаются без изменений
     public PaymentCardRequestDTO() {}
 
     public PaymentCardRequestDTO(Long userId, String number, String holder, String expirationDate, Boolean active) {
@@ -33,20 +45,4 @@ public class PaymentCardRequestDTO implements Serializable {
         this.expirationDate = expirationDate;
         this.active = active;
     }
-
-    // Геттеры и сеттеры
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getNumber() { return number; }
-    public void setNumber(String number) { this.number = number; }
-
-    public String getHolder() { return holder; }
-    public void setHolder(String holder) { this.holder = holder; }
-
-    public String getExpirationDate() { return expirationDate; }
-    public void setExpirationDate(String expirationDate) { this.expirationDate = expirationDate; }
-
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
 }

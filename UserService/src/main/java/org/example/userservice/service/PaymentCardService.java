@@ -10,15 +10,16 @@ import org.example.userservice.exception.BusinessRuleException;
 import org.example.userservice.mapper.PaymentCardMapper;
 import org.example.userservice.repository.PaymentCardRepository;
 import org.example.userservice.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.example.userservice.specification.PaymentCardSpecifications;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import static org.example.userservice.entity.User.MAX_PAYMENT_CARDS;
 
 @Service
 public class PaymentCardService {
@@ -26,7 +27,7 @@ public class PaymentCardService {
     private static final Logger log = LoggerFactory.getLogger(PaymentCardService.class);
     private final PaymentCardRepository paymentCardRepository;
     private final UserRepository userRepository;
-    private final PaymentCardMapper paymentCardMapper;
+    private final PaymentCardMapper paymentCardMapper; // MapStruct маппер
 
     public PaymentCardService(PaymentCardRepository paymentCardRepository,
                               UserRepository userRepository,
@@ -40,12 +41,17 @@ public class PaymentCardService {
         log.info("Fetching payment card by ID: {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException(id));
+
+        // MapStruct автоматически маппит все поля включая информацию о пользователе
         return paymentCardMapper.toResponseDTO(card);
     }
 
-    public Page<PaymentCardResponseDTO> getAllCards(Pageable pageable) {
+    public Page<PaymentCardResponseDTO> getAllCards(Pageable pageable, String holder, String number) {
         log.info("Fetching all payment cards");
-        Page<PaymentCard> cardsPage = paymentCardRepository.findAll(pageable);
+        Specification<PaymentCard> spec = PaymentCardSpecifications.withFilters(holder, number);
+        Page<PaymentCard> cardsPage = paymentCardRepository.findAll(spec, pageable);
+
+        log.info("Found {} payment cards with given filters", cardsPage.getTotalElements());
         return cardsPage.map(paymentCardMapper::toResponseDTO);
     }
 
@@ -68,20 +74,34 @@ public class PaymentCardService {
         User user = userRepository.findById(cardDTO.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(cardDTO.getUserId()));
 
+        // Проверка ограничения на количество карт через репозиторий
         long cardCount = paymentCardRepository.countByUserId(user.getId());
-        if (cardCount >= 5) {
-            throw new BusinessRuleException("User cannot have more than 5 payment cards");
+        if (cardCount >= MAX_PAYMENT_CARDS) {
+            throw new BusinessRuleException("User cannot have more than " + MAX_PAYMENT_CARDS + " payment cards");
         }
 
+        // Проверка уникальности номера карты
         if (paymentCardRepository.findByNumber(cardDTO.getNumber()).isPresent()) {
             throw new BusinessRuleException("Card with number " + cardDTO.getNumber() + " already exists");
         }
 
+        // MapStruct создает сущность PaymentCard из DTO
         PaymentCard card = paymentCardMapper.toEntity(cardDTO);
-        PaymentCard savedCard = paymentCardRepository.save(card);
 
-        log.info("Created payment card with ID: {}", savedCard.getId());
-        return paymentCardMapper.toResponseDTO(savedCard);
+        try {
+            // Используем бизнес-логику из сущности User для добавления карты
+            user.addPaymentCard(card);
+        } catch (IllegalStateException e) {
+            throw new BusinessRuleException(e.getMessage());
+        }
+
+        // Сохраняем пользователя - карта сохранится каскадно благодаря связи @OneToMany
+        userRepository.save(user);
+
+        log.info("Created payment card with ID: {}", card.getId());
+
+        // MapStruct автоматически создает ResponseDTO с замаскированным номером карты
+        return paymentCardMapper.toResponseDTO(card);
     }
 
     @CacheEvict(value = "users", key = "#cardDTO.userId")
@@ -92,11 +112,13 @@ public class PaymentCardService {
         PaymentCard existingCard = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException(id));
 
+        // Проверка уникальности номера карты (если номер изменился)
         if (!existingCard.getNumber().equals(cardDTO.getNumber()) &&
                 paymentCardRepository.findByNumber(cardDTO.getNumber()).isPresent()) {
             throw new BusinessRuleException("Card number " + cardDTO.getNumber() + " is already taken");
         }
 
+        // Проверка смены пользователя и ограничения на количество карт
         if (!existingCard.getUser().getId().equals(cardDTO.getUserId())) {
             User newUser = userRepository.findById(cardDTO.getUserId())
                     .orElseThrow(() -> new UserNotFoundException(cardDTO.getUserId()));
@@ -108,6 +130,7 @@ public class PaymentCardService {
             existingCard.setUser(newUser);
         }
 
+        // Обновляем поля вручную
         existingCard.setNumber(cardDTO.getNumber());
         existingCard.setHolder(cardDTO.getHolder());
         existingCard.setExpirationDate(cardDTO.getExpirationDate());

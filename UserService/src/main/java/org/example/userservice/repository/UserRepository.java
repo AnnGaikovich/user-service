@@ -1,4 +1,3 @@
-// UserRepository.java
 package org.example.userservice.repository;
 
 import org.example.userservice.entity.User;
@@ -23,11 +22,12 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     List<User> findActiveUsersWithBirthDate();
 
     // Native SQL query
+    //@Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "SELECT COUNT(*) FROM users WHERE email = :email AND id != :excludeId", nativeQuery = true)
     long countByEmailExcludingId(@Param("email") String email, @Param("excludeId") Long excludeId);
 
     // Native SQL for bulk update
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "UPDATE users SET active = :active WHERE id = :id", nativeQuery = true)
     void updateActiveStatus(@Param("id") Long id, @Param("active") Boolean active);
 }

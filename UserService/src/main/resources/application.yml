@@ -1,8 +1,24 @@
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: true
+  cache:
+    disabled: true
+  packages-to-scan: org.example.userservice.controller
+
 spring:
   profiles:
     active: local
   application:
     name: UserService
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 ---
 # Local Profile (для разработки)
@@ -25,7 +41,7 @@ spring:
         format_sql: ${FORMAT_SQL:true}
     show-sql: ${SHOW_SQL:false}
   liquibase:
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
     enabled: ${LIQUIBASE_ENABLED:true}
   autoconfigure:
     exclude:
@@ -40,7 +56,7 @@ spring:
     cache:
       type: redis
       redis:
-        time-to-live: 600000  # 10 минут в миллисекундах
+        time-to-live: 600000  # 10 мин
 
   management:
     endpoints:
@@ -66,35 +82,35 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:postgresql://postgres:5432/user_service_db
-    username: postgres
-    password: 123456
-    driver-class-name: org.postgresql.Driver
+    url:  ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: false
-        format_sql: true
-    show-sql: false
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        show_sql: ${SHOW_SQL:false}
+        format_sql: ${FORMAT_SQL:true}
+    show-sql: ${SHOW_SQL:false}
   liquibase:
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
-    enabled: true
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+    enabled: ${LIQUIBASE_ENABLED:true}
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
   data:
     redis:
       host: redis
-      port: 6380
+      port: 6379
       password:
       timeout: 60000
     cache:
       type: redis
       redis:
-        time-to-live: 600000
+        time-to-live: 600000 # 10 мин
 
   management:
     endpoints:

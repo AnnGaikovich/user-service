@@ -153,7 +153,7 @@ class PaymentCardServiceTest {
         when(paymentCardRepository.findAll(pageable)).thenReturn(cardPage);
         when(paymentCardMapper.toResponseDTO(paymentCard)).thenReturn(cardResponseDTO);
 
-        Page<PaymentCardResponseDTO> result = paymentCardService.getAllCards(pageable);
+        Page<PaymentCardResponseDTO> result = paymentCardService.getAllCards(pageable, null, null);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
