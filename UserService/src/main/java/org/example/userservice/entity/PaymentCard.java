@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -21,7 +22,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class PaymentCard {
 
-    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -58,7 +58,6 @@ public class PaymentCard {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Конструкторы
     public PaymentCard() {}
 
     public PaymentCard(Long id, User user, String number, String holder, String expirationDate,
@@ -73,12 +72,11 @@ public class PaymentCard {
         this.updatedAt = updatedAt;
     }
 
-    // Builder pattern (вручную)
+    // Builder pattern
     public static PaymentCardBuilder builder() {
         return new PaymentCardBuilder();
     }
 
-    // Builder класс
     public static class PaymentCardBuilder {
         private Long id;
         private User user;

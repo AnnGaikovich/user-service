@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/cache")
 @Tag(name = "Cache Management", description = "APIs for managing Redis cache")
+@PreAuthorize("hasRole('ADMIN')")
 public class CacheController {
 
     private final RedisTemplate<String, Object> redisTemplate;

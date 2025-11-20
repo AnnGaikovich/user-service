@@ -27,7 +27,6 @@ public class User {
 
     public static final int MAX_PAYMENT_CARDS = 5;
 
-    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -66,7 +65,6 @@ public class User {
     @JsonManagedReference
     private List<PaymentCard> paymentCards = new ArrayList<>();
 
-    // Конструкторы
     public User() {}
 
     public User(Long id, String name, String surname, LocalDate birthDate, String email, Boolean active,
@@ -82,12 +80,6 @@ public class User {
         this.paymentCards = paymentCards;
     }
 
-    // Builder pattern (вручную)
-    public static UserBuilder builder() {
-        return new UserBuilder();
-    }
-
-    // Не более MAX_PAYMENT_CARDS карт
     public void addPaymentCard(PaymentCard card) {
         if (paymentCards.size() >= MAX_PAYMENT_CARDS) {
             throw new BusinessRuleException("User cannot have more than " + MAX_PAYMENT_CARDS + " payment cards");
@@ -96,12 +88,11 @@ public class User {
         card.setUser(this);
     }
 
-    public void removePaymentCard(PaymentCard card) {
-        paymentCards.remove(card);
-        card.setUser(null);
+    // Builder pattern
+    public static UserBuilder builder() {
+        return new UserBuilder();
     }
 
-    // Builder класс
     public static class UserBuilder {
         private Long id;
         private String name;
