@@ -16,7 +16,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -32,25 +31,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Get current user profile", description = "Retrieves the profile of the currently authenticated user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User profile retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @GetMapping("/me")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> getCurrentUser() {
-        UserResponseDTO user = userService.getCurrentUser();
-        return ResponseEntity.ok(user);
-    }
-
     @Operation(summary = "Create a new user", description = "Creates a new user with the provided details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         UserResponseDTO createdUser = userService.createUser(userRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
@@ -62,7 +48,6 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and #id == authentication.principal.userId)")
     public ResponseEntity<UserResponseDTO> getUserById(
             @Parameter(description = "ID of the user to be retrieved") @PathVariable Long id) {
         UserResponseDTO user = userService.getUserById(id);
@@ -71,7 +56,6 @@ public class UserController {
 
     @Operation(summary = "Get all users", description = "Retrieves a paginated list of all users with optional filtering")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size,
@@ -91,7 +75,6 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and #id == authentication.principal.userId)")
     public ResponseEntity<UserResponseDTO> updateUser(
             @Parameter(description = "ID of the user to be updated") @PathVariable Long id,
             @Valid @RequestBody UserRequestDTO userRequestDTO) {
@@ -105,7 +88,6 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> activateUser(
             @Parameter(description = "ID of the user to be activated") @PathVariable Long id) {
         userService.activateUser(id);
@@ -118,7 +100,6 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deactivateUser(
             @Parameter(description = "ID of the user to be deactivated") @PathVariable Long id) {
         userService.deactivateUser(id);
@@ -131,7 +112,6 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteUser(
             @Parameter(description = "ID of the user to be deleted") @PathVariable Long id) {
         userService.deleteUser(id);

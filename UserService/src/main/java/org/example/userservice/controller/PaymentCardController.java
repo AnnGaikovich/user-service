@@ -16,7 +16,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -39,7 +38,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and #cardDTO.userId == authentication.principal.userId)")
     public ResponseEntity<PaymentCardResponseDTO> createCard(@Valid @RequestBody PaymentCardRequestDTO cardDTO) {
         PaymentCardResponseDTO createdCard = paymentCardService.createCard(cardDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCard);
@@ -51,7 +49,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "Payment card not found")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @paymentCardSecurityService.isCardOwner(#id, authentication.principal.userId)")
     public ResponseEntity<PaymentCardResponseDTO> getCardById(
             @Parameter(description = "ID of the payment card to be retrieved") @PathVariable Long id) {
         PaymentCardResponseDTO card = paymentCardService.getCardById(id);
@@ -60,7 +57,6 @@ public class PaymentCardController {
 
     @Operation(summary = "Get all payment cards", description = "Retrieves a paginated list of all payment cards with optional filtering")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<PaymentCardResponseDTO>> getAllCards(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size,
@@ -79,7 +75,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and #userId == authentication.principal.userId)")
     public ResponseEntity<Page<PaymentCardResponseDTO>> getCardsByUserId(
             @Parameter(description = "ID of the user") @PathVariable Long userId,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
@@ -98,7 +93,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @paymentCardSecurityService.isCardOwner(#id, authentication.principal.userId)")
     public ResponseEntity<PaymentCardResponseDTO> updateCard(
             @Parameter(description = "ID of the payment card to be updated") @PathVariable Long id,
             @Valid @RequestBody PaymentCardRequestDTO cardDTO) {
@@ -112,7 +106,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "Payment card not found")
     })
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN') or @paymentCardSecurityService.isCardOwner(#id, authentication.principal.userId)")
     public ResponseEntity<Map<String, String>> activateCard(
             @Parameter(description = "ID of the payment card to be activated") @PathVariable Long id) {
         paymentCardService.activateCard(id);
@@ -125,7 +118,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "Payment card not found")
     })
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN') or @paymentCardSecurityService.isCardOwner(#id, authentication.principal.userId)")
     public ResponseEntity<Map<String, String>> deactivateCard(
             @Parameter(description = "ID of the payment card to be deactivated") @PathVariable Long id) {
         paymentCardService.deactivateCard(id);
@@ -138,7 +130,6 @@ public class PaymentCardController {
             @ApiResponse(responseCode = "404", description = "Payment card not found")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @paymentCardSecurityService.isCardOwner(#id, authentication.principal.userId)")
     public ResponseEntity<Map<String, String>> deleteCard(
             @Parameter(description = "ID of the payment card to be deleted") @PathVariable Long id) {
         paymentCardService.deleteCard(id);

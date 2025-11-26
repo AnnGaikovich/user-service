@@ -1,35 +1,36 @@
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: true
+  cache:
+    disabled: true
+  packages-to-scan: org.example.userservice.controller
+
 spring:
   profiles:
     active: local
   application:
     name: UserService
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui/index.html
-    enabled: true
-
-app:
-    jwt:
-      public-key: classpath:keys/public.pem
-      issuer: auth-service
-
-internal:
-  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 ---
-# Local Profile (for development)
+# Local Profile (для разработки)
 spring:
   config:
     activate:
       on-profile: local
   datasource:
-      url: ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:123456}
-      driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -40,22 +41,24 @@ spring:
         format_sql: ${FORMAT_SQL:true}
     show-sql: ${SHOW_SQL:false}
   liquibase:
-      change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
-      enabled: ${LIQUIBASE_ENABLED:true}
-
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+    enabled: ${LIQUIBASE_ENABLED:true}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
   data:
     redis:
       host: localhost
       port: 6379
       password:
       timeout: 60000
+    cache:
+      type: redis
+      redis:
+        time-to-live: 600000  # 10 мин
 
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000  # 10 min
-
-management:
+  management:
     endpoints:
       web:
         exposure:
@@ -63,28 +66,17 @@ management:
     endpoint:
       health:
         show-details: always
-    security:
-      enabled: false
-
-# JWT Configuration
-app:
-  jwt:
-    public-key: classpath:keys/public.pem
-    issuer: auth-service
-
-internal:
-  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
 
 server:
   port: 8080
 
 logging:
   level:
-    org.example.userservice: DEBUG
+    com.example.app: DEBUG
     org.hibernate.SQL: ${LOG_SQL:DEBUG}
 
 ---
-# Docker Profile (for containerization)
+# Docker Profile (для контейнеризации)
 spring:
   config:
     activate:
@@ -115,13 +107,12 @@ spring:
       port: 6379
       password:
       timeout: 60000
-
-  cache:
+    cache:
       type: redis
       redis:
         time-to-live: 600000 # 10 мин
 
-management:
+  management:
     endpoints:
       web:
         exposure:
@@ -130,20 +121,10 @@ management:
       health:
         show-details: always
 
-# JWT Configuration
-app:
-  jwt:
-    public-key: file:/app/keys/public.pem
-    issuer: auth-service
-
-internal:
-  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
-
 server:
   port: 8080
 
 logging:
   level:
-    com.example.userservice: INFO
+    com.example.app: INFO
     org.hibernate.SQL: WARN
-

@@ -4,14 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.io.Serializable;
 
 @Setter
 @Getter
-@AllArgsConstructor
 @Schema(description = "Payment card creation and update request")
 public class PaymentCardRequestDTO implements Serializable {
 
@@ -36,6 +35,14 @@ public class PaymentCardRequestDTO implements Serializable {
     @Schema(description = "Whether the card is active", example = "true")
     private Boolean active = true;
 
+    // Конструкторы остаются без изменений
     public PaymentCardRequestDTO() {}
 
+    public PaymentCardRequestDTO(Long userId, String number, String holder, String expirationDate, Boolean active) {
+        this.userId = userId;
+        this.number = number;
+        this.holder = holder;
+        this.expirationDate = expirationDate;
+        this.active = active;
+    }
 }

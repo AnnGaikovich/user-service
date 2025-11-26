@@ -13,6 +13,7 @@ public class PaymentCardSpecifications {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // Фильтр по держателю карты (частичное совпадение)
             if (StringUtils.hasText(holder)) {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("holder")),
@@ -20,6 +21,7 @@ public class PaymentCardSpecifications {
                 ));
             }
 
+            // Фильтр по номеру карты (частичное совпадение)
             if (StringUtils.hasText(number)) {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("number")),
@@ -30,4 +32,5 @@ public class PaymentCardSpecifications {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 }
