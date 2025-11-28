@@ -10,9 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
@@ -26,7 +24,7 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
         UserRequestDTO userRequest = new UserRequestDTO();
         userRequest.setName("Card");
         userRequest.setSurname("Owner");
-        userRequest.setEmail(email); // Используем переданный email
+        userRequest.setEmail(email);
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
         userRequest.setActive(true);
         return userRequest;
@@ -36,8 +34,7 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
         PaymentCardRequestDTO cardRequest = new PaymentCardRequestDTO();
         cardRequest.setNumber("4111111111111111");
         cardRequest.setHolder("CARD HOLDER");
-        // Устанавливаем строку в формате MM/YY
-        cardRequest.setExpirationDate("12/25"); // Декабрь 2025
+        cardRequest.setExpirationDate("12/25");
         cardRequest.setActive(true);
         cardRequest.setUserId(userId);
         return cardRequest;
@@ -45,7 +42,6 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Генерируем уникальный email для каждого теста
         String uniqueEmail = "card.owner." + System.currentTimeMillis() + "@example.com";
 
         UserRequestDTO userRequest = createUserRequestDTO(uniqueEmail);
@@ -56,7 +52,6 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
                 UserResponseDTO.class
         );
 
-        // Проверяем, что пользователь создан успешно
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         userId = response.getBody().getId();
@@ -67,7 +62,6 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
     void createCard_ThenGetCard_Success() {
         PaymentCardRequestDTO cardRequest = createPaymentCardRequestDTO(userId);
 
-        // Create card
         ResponseEntity<PaymentCardResponseDTO> createResponse = restTemplate.postForEntity(
                 "/api/v1/cards",
                 cardRequest,
@@ -80,15 +74,27 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
 
         Long cardId = createResponse.getBody().getId();
 
-        // Get card
+        System.out.println("Created card ID: " + cardId);
+        System.out.println("Response body: " + createResponse.getBody());
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         ResponseEntity<PaymentCardResponseDTO> getResponse = restTemplate.getForEntity(
                 "/api/v1/cards/" + cardId,
                 PaymentCardResponseDTO.class
         );
 
+        System.out.println("GET Response status: " + getResponse.getStatusCode());
+        System.out.println("GET Response body: " + getResponse.getBody());
+
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
+        assertNotNull(getResponse.getBody(), "Response body should not be null");
         assertEquals(cardId, getResponse.getBody().getId());
-        assertEquals("4111111111111111", getResponse.getBody().getNumber());
+        assertEquals("4111********1111", getResponse.getBody().getNumber());
     }
 
     @Test
@@ -98,7 +104,7 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
         cardRequest.setHolder("CARD HOLDER");
         cardRequest.setExpirationDate("12/25");
         cardRequest.setActive(true);
-        cardRequest.setUserId(999L); // Non-existent user
+        cardRequest.setUserId(999L);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 "/api/v1/cards",
@@ -114,7 +120,7 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
         PaymentCardRequestDTO cardRequest = new PaymentCardRequestDTO();
         cardRequest.setNumber("4111111111111111");
         cardRequest.setHolder("CARD HOLDER");
-        cardRequest.setExpirationDate("2025-12-31"); // Неправильный формат
+        cardRequest.setExpirationDate("2025-12-31");
         cardRequest.setActive(true);
         cardRequest.setUserId(userId);
 

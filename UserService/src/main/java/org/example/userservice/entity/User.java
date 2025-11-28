@@ -12,7 +12,6 @@ import org.example.userservice.exception.BusinessRuleException;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ public class User {
 
     public static final int MAX_PAYMENT_CARDS = 5;
 
-    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -66,7 +64,6 @@ public class User {
     @JsonManagedReference
     private List<PaymentCard> paymentCards = new ArrayList<>();
 
-    // Конструкторы
     public User() {}
 
     public User(Long id, String name, String surname, LocalDate birthDate, String email, Boolean active,
@@ -82,12 +79,12 @@ public class User {
         this.paymentCards = paymentCards;
     }
 
-    // Builder pattern (вручную)
+    // Builder pattern
     public static UserBuilder builder() {
         return new UserBuilder();
     }
 
-    // Не более MAX_PAYMENT_CARDS карт
+
     public void addPaymentCard(PaymentCard card) {
         if (paymentCards.size() >= MAX_PAYMENT_CARDS) {
             throw new BusinessRuleException("User cannot have more than " + MAX_PAYMENT_CARDS + " payment cards");
@@ -96,12 +93,6 @@ public class User {
         card.setUser(this);
     }
 
-    public void removePaymentCard(PaymentCard card) {
-        paymentCards.remove(card);
-        card.setUser(null);
-    }
-
-    // Builder класс
     public static class UserBuilder {
         private Long id;
         private String name;
@@ -140,21 +131,6 @@ public class User {
 
         public UserBuilder active(Boolean active) {
             this.active = active;
-            return this;
-        }
-
-        public UserBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public UserBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
-            return this;
-        }
-
-        public UserBuilder paymentCards(List<PaymentCard> paymentCards) {
-            this.paymentCards = paymentCards;
             return this;
         }
 

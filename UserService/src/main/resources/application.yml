@@ -1,6 +1,6 @@
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /v1/api-docs
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
@@ -15,7 +15,7 @@ spring:
   profiles:
     active: local
   application:
-    name: UserService
+    name: ${APPLICATION_NAME:UserService}
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -40,6 +40,7 @@ spring:
         show_sql: ${SHOW_SQL:false}
         format_sql: ${FORMAT_SQL:true}
     show-sql: ${SHOW_SQL:false}
+
   liquibase:
     change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
     enabled: ${LIQUIBASE_ENABLED:true}
@@ -53,22 +54,22 @@ spring:
       port: 6379
       password:
       timeout: 60000
-    cache:
-      type: redis
-      redis:
-        time-to-live: 600000  # 10 мин
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 мин
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
-    endpoint:
-      health:
-        show-details: always
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 logging:
   level:
@@ -107,22 +108,23 @@ spring:
       port: 6379
       password:
       timeout: 60000
-    cache:
-      type: redis
-      redis:
-        time-to-live: 600000 # 10 мин
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
-    endpoint:
-      health:
-        show-details: always
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 мин
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 logging:
   level:

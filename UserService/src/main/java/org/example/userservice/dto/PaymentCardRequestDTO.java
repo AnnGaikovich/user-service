@@ -35,7 +35,6 @@ public class PaymentCardRequestDTO implements Serializable {
     @Schema(description = "Whether the card is active", example = "true")
     private Boolean active = true;
 
-    // Конструкторы остаются без изменений
     public PaymentCardRequestDTO() {}
 
     public PaymentCardRequestDTO(Long userId, String number, String holder, String expirationDate, Boolean active) {

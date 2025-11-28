@@ -24,7 +24,7 @@ public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
-    private final UserMapper userMapper; // MapStruct маппер
+    private final UserMapper userMapper;
 
     public UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
@@ -40,13 +40,11 @@ public class UserService {
             throw new BusinessRuleException("User with email " + userRequestDTO.getEmail() + " already exists");
         }
 
-        // MapStruct автоматически создает сущность из DTO
         User user = userMapper.toEntity(userRequestDTO);
         User savedUser = userRepository.save(user);
 
         log.info("Created user with ID: {}", savedUser.getId());
 
-        // MapStruct автоматически создает ResponseDTO из сущности
         return userMapper.toResponseDTO(savedUser);
     }
 
@@ -56,7 +54,6 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        // MapStruct автоматически маппит все поля включая paymentCards
         return userMapper.toResponseDTO(user);
     }
 
@@ -68,7 +65,6 @@ public class UserService {
         Page<User> usersPage = userRepository.findAll(spec, pageable);
 
         log.info("Found {} users with given filters", usersPage.getTotalElements());
-        // MapStruct автоматически конвертирует Page<User> в Page<UserResponseDTO>
         return usersPage.map(userMapper::toResponseDTO);
     }
 
@@ -88,7 +84,6 @@ public class UserService {
             throw new BusinessRuleException("Email " + userRequestDTO.getEmail() + " is already taken");
         }
 
-        // Обновляем поля вручную, так как MapStruct создает новую сущность
         existingUser.setName(userRequestDTO.getName());
         existingUser.setSurname(userRequestDTO.getSurname());
         existingUser.setBirthDate(userRequestDTO.getBirthDate());

@@ -27,7 +27,7 @@ public class PaymentCardService {
     private static final Logger log = LoggerFactory.getLogger(PaymentCardService.class);
     private final PaymentCardRepository paymentCardRepository;
     private final UserRepository userRepository;
-    private final PaymentCardMapper paymentCardMapper; // MapStruct маппер
+    private final PaymentCardMapper paymentCardMapper;
 
     public PaymentCardService(PaymentCardRepository paymentCardRepository,
                               UserRepository userRepository,
@@ -40,14 +40,17 @@ public class PaymentCardService {
     public PaymentCardResponseDTO getCardById(Long id) {
         log.info("Fetching payment card by ID: {}", id);
         PaymentCard card = paymentCardRepository.findById(id)
-                .orElseThrow(() -> new PaymentCardNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Payment card with ID {} not found", id);
+                    return new PaymentCardNotFoundException(id);
+                });
 
-        // MapStruct автоматически маппит все поля включая информацию о пользователе
+        log.info("Found payment card: ID={}, Number={}", card.getId(), card.getNumber());
         return paymentCardMapper.toResponseDTO(card);
     }
 
     public Page<PaymentCardResponseDTO> getAllCards(Pageable pageable, String holder, String number) {
-        log.info("Fetching all payment cards");
+        log.info("Fetching all payment cards with filters - holder: {}, number: {}", holder, number);
         Specification<PaymentCard> spec = PaymentCardSpecifications.withFilters(holder, number);
         Page<PaymentCard> cardsPage = paymentCardRepository.findAll(spec, pageable);
 
@@ -74,34 +77,28 @@ public class PaymentCardService {
         User user = userRepository.findById(cardDTO.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(cardDTO.getUserId()));
 
-        // Проверка ограничения на количество карт через репозиторий
         long cardCount = paymentCardRepository.countByUserId(user.getId());
         if (cardCount >= MAX_PAYMENT_CARDS) {
             throw new BusinessRuleException("User cannot have more than " + MAX_PAYMENT_CARDS + " payment cards");
         }
 
-        // Проверка уникальности номера карты
         if (paymentCardRepository.findByNumber(cardDTO.getNumber()).isPresent()) {
             throw new BusinessRuleException("Card with number " + cardDTO.getNumber() + " already exists");
         }
 
-        // MapStruct создает сущность PaymentCard из DTO
         PaymentCard card = paymentCardMapper.toEntity(cardDTO);
 
-        try {
-            // Используем бизнес-логику из сущности User для добавления карты
-            user.addPaymentCard(card);
-        } catch (IllegalStateException e) {
-            throw new BusinessRuleException(e.getMessage());
-        }
+        user.addPaymentCard(card);
+        User savedUser = userRepository.save(user);
 
-        // Сохраняем пользователя - карта сохранится каскадно благодаря связи @OneToMany
-        userRepository.save(user);
+        PaymentCard savedCard = savedUser.getPaymentCards().stream()
+                .filter(c -> c.getNumber().equals(cardDTO.getNumber()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("Failed to retrieve saved card"));
 
-        log.info("Created payment card with ID: {}", card.getId());
+        log.info("Created payment card with ID: {}", savedCard.getId());
 
-        // MapStruct автоматически создает ResponseDTO с замаскированным номером карты
-        return paymentCardMapper.toResponseDTO(card);
+        return paymentCardMapper.toResponseDTO(savedCard);
     }
 
     @CacheEvict(value = "users", key = "#cardDTO.userId")
@@ -112,13 +109,11 @@ public class PaymentCardService {
         PaymentCard existingCard = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException(id));
 
-        // Проверка уникальности номера карты (если номер изменился)
         if (!existingCard.getNumber().equals(cardDTO.getNumber()) &&
                 paymentCardRepository.findByNumber(cardDTO.getNumber()).isPresent()) {
             throw new BusinessRuleException("Card number " + cardDTO.getNumber() + " is already taken");
         }
 
-        // Проверка смены пользователя и ограничения на количество карт
         if (!existingCard.getUser().getId().equals(cardDTO.getUserId())) {
             User newUser = userRepository.findById(cardDTO.getUserId())
                     .orElseThrow(() -> new UserNotFoundException(cardDTO.getUserId()));
@@ -130,7 +125,6 @@ public class PaymentCardService {
             existingCard.setUser(newUser);
         }
 
-        // Обновляем поля вручную
         existingCard.setNumber(cardDTO.getNumber());
         existingCard.setHolder(cardDTO.getHolder());
         existingCard.setExpirationDate(cardDTO.getExpirationDate());

@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,14 +49,13 @@ class PaymentCardServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Создаем User через конструктор и сеттеры
+
         user = new User();
         user.setId(1L);
         user.setName("John");
         user.setSurname("Doe");
         user.setEmail("john.doe@example.com");
 
-        // Создаем PaymentCard через конструктор и сеттеры
         paymentCard = new PaymentCard();
         paymentCard.setId(1L);
         paymentCard.setNumber("4111111111111111");
@@ -64,7 +64,6 @@ class PaymentCardServiceTest {
         paymentCard.setActive(true);
         paymentCard.setUser(user);
 
-        // Создаем PaymentCardRequestDTO через конструктор и сеттеры
         cardRequestDTO = new PaymentCardRequestDTO();
         cardRequestDTO.setNumber("4111111111111111");
         cardRequestDTO.setHolder("JOHN DOE");
@@ -72,7 +71,6 @@ class PaymentCardServiceTest {
         cardRequestDTO.setActive(true);
         cardRequestDTO.setUserId(1L);
 
-        // Создаем PaymentCardResponseDTO через конструктор и сеттеры
         cardResponseDTO = new PaymentCardResponseDTO();
         cardResponseDTO.setId(1L);
         cardResponseDTO.setNumber("4111111111111111");
@@ -87,18 +85,22 @@ class PaymentCardServiceTest {
 
     @Test
     void createCard_Success() {
+        // given
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(paymentCardRepository.countByUserId(1L)).thenReturn(0L);
         when(paymentCardRepository.findByNumber("4111111111111111")).thenReturn(Optional.empty());
         when(paymentCardMapper.toEntity(cardRequestDTO)).thenReturn(paymentCard);
-        when(paymentCardRepository.save(paymentCard)).thenReturn(paymentCard);
+        when(userRepository.save(any(User.class))).thenReturn(user);
         when(paymentCardMapper.toResponseDTO(paymentCard)).thenReturn(cardResponseDTO);
 
         PaymentCardResponseDTO result = paymentCardService.createCard(cardRequestDTO);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        verify(paymentCardRepository).save(paymentCard);
+
+        verify(userRepository).save(any(User.class));
+
+        verify(paymentCardRepository, never()).save(any(PaymentCard.class));
     }
 
     @Test
@@ -106,6 +108,7 @@ class PaymentCardServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> paymentCardService.createCard(cardRequestDTO));
+        verify(userRepository, never()).save(any(User.class));
         verify(paymentCardRepository, never()).save(any(PaymentCard.class));
     }
 
@@ -115,6 +118,7 @@ class PaymentCardServiceTest {
         when(paymentCardRepository.countByUserId(1L)).thenReturn(5L);
 
         assertThrows(BusinessRuleException.class, () -> paymentCardService.createCard(cardRequestDTO));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -124,6 +128,7 @@ class PaymentCardServiceTest {
         when(paymentCardRepository.findByNumber("4111111111111111")).thenReturn(Optional.of(paymentCard));
 
         assertThrows(BusinessRuleException.class, () -> paymentCardService.createCard(cardRequestDTO));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -147,17 +152,18 @@ class PaymentCardServiceTest {
 
     @Test
     void getAllCards_Success() {
+
         Pageable pageable = PageRequest.of(0, 10);
         Page<PaymentCard> cardPage = new PageImpl<>(List.of(paymentCard));
 
-        when(paymentCardRepository.findAll(pageable)).thenReturn(cardPage);
+        when(paymentCardRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cardPage);
         when(paymentCardMapper.toResponseDTO(paymentCard)).thenReturn(cardResponseDTO);
 
         Page<PaymentCardResponseDTO> result = paymentCardService.getAllCards(pageable, null, null);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        verify(paymentCardRepository).findAll(pageable);
+        verify(paymentCardRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test

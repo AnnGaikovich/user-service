@@ -1,4 +1,3 @@
-# src/main/resources/db/changelog/changes/001-create-users-table.yaml
 databaseChangeLog:
   - changeSet:
       id: create-users-table

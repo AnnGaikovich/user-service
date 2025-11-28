@@ -9,9 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerIntegrationTest extends AbstractIntegrationTest {
@@ -41,7 +39,7 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void createUser_ThenGetUser_Success() {
-        // Create User
+
         UserRequestDTO userRequest = createUserRequestDTO();
 
         ResponseEntity<UserResponseDTO> createResponse = restTemplate.postForEntity(
@@ -56,7 +54,6 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
 
         Long userId = createResponse.getBody().getId();
 
-        // Get User
         ResponseEntity<UserResponseDTO> getResponse = restTemplate.getForEntity(
                 "/api/v1/users/" + userId,
                 UserResponseDTO.class
@@ -72,7 +69,6 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
     void createUser_DuplicateEmail_ReturnsConflict() {
         UserRequestDTO userRequest = createUserRequestDTO("John", "Doe", "duplicate@example.com");
 
-        // First request - should succeed
         ResponseEntity<UserResponseDTO> firstResponse = restTemplate.postForEntity(
                 "/api/v1/users",
                 userRequest,
@@ -80,18 +76,17 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(HttpStatus.CREATED, firstResponse.getStatusCode());
 
-        // Second request with same email - should return CONFLICT (409)
         ResponseEntity<String> secondResponse = restTemplate.postForEntity(
                 "/api/v1/users",
                 userRequest,
                 String.class
         );
-        assertEquals(HttpStatus.CONFLICT, secondResponse.getStatusCode()); // Изменили на CONFLICT
+        assertEquals(HttpStatus.CONFLICT, secondResponse.getStatusCode());
     }
 
     @Test
     void updateUser_Success() {
-        // First create a user
+
         UserRequestDTO createRequest = createUserRequestDTO("Original", "Name", "original@example.com");
 
         ResponseEntity<UserResponseDTO> createResponse = restTemplate.postForEntity(
@@ -101,7 +96,6 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
         );
         Long userId = createResponse.getBody().getId();
 
-        // Update the user
         UserRequestDTO updateRequest = createUserRequestDTO("Updated", "Name", "updated@example.com");
 
         ResponseEntity<UserResponseDTO> updateResponse = restTemplate.exchange(

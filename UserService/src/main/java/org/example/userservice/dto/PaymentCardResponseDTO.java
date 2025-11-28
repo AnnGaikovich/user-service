@@ -2,14 +2,13 @@ package org.example.userservice.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.io.Serializable;
 
 @Setter
 @Getter
 public class PaymentCardResponseDTO implements Serializable {
-    // Геттеры и сеттеры
+
     private Long id;
     private String number;
     private String holder;
@@ -20,7 +19,6 @@ public class PaymentCardResponseDTO implements Serializable {
     private Long userId;
     private String userFullName;
 
-    // Конструкторы
     public PaymentCardResponseDTO() {}
 
     public PaymentCardResponseDTO(Long id, String number, String holder, String expirationDate,
