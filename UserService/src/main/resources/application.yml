@@ -1,0 +1,132 @@
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: true
+  cache:
+    disabled: true
+  packages-to-scan: org.example.userservice.controller
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: ${APPLICATION_NAME:UserService}
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+---
+# Local Profile (для разработки)
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        show_sql: ${SHOW_SQL:false}
+        format_sql: ${FORMAT_SQL:true}
+    show-sql: ${SHOW_SQL:false}
+
+  liquibase:
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+    enabled: ${LIQUIBASE_ENABLED:true}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 мин
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.example.app: DEBUG
+    org.hibernate.SQL: ${LOG_SQL:DEBUG}
+
+---
+# Docker Profile (для контейнеризации)
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url:  ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        show_sql: ${SHOW_SQL:false}
+        format_sql: ${FORMAT_SQL:true}
+    show-sql: ${SHOW_SQL:false}
+  liquibase:
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+    enabled: ${LIQUIBASE_ENABLED:true}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password:
+      timeout: 60000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 мин
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.example.app: INFO
+    org.hibernate.SQL: WARN
