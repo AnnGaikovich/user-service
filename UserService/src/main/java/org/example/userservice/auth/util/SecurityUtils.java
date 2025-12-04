@@ -35,7 +35,7 @@ public class SecurityUtils {
     }
 
     public static boolean isService() {
-        return hasRole("ROLE_ADMINE");
+        return hasRole("ROLE_ADMIN");
     }
 
     public static boolean isCurrentUser(Long userId) {

@@ -31,7 +31,6 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
 
         String requestUri = request.getRequestURI();
 
-        // Применяем фильтр только к внутренним эндпоинтам
         if (requestUri.startsWith("/api/v1/internal/")) {
             String apiKey = request.getHeader("X-API-Key");
 
@@ -40,8 +39,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key");
                 return;
             }
-
-            // Устанавливаем аутентификацию с ролью SERVICE
+            
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             "internal-service",

@@ -2,6 +2,7 @@ package org.example.userservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS) // Добавьте эту аннотацию
 @Setter
 @Getter
 public class UserResponseDTO implements Serializable {
