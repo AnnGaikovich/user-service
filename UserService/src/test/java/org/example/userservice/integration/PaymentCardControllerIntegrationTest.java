@@ -88,7 +88,9 @@ class PaymentCardControllerIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
         assertEquals(cardId, getResponse.getBody().getId());
-        assertEquals("4111111111111111", getResponse.getBody().getNumber());
+
+        // Ожидаем замаскированный номер карты
+        assertEquals("4111********1111", getResponse.getBody().getNumber()); // Изменено здесь
     }
 
     @Test

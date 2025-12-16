@@ -1,17 +1,17 @@
 package org.example.userservice.integration;
 
+import org.example.userservice.config.TestRedisConfig;
 import org.example.userservice.dto.UserRequestDTO;
 import org.example.userservice.dto.UserResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerIntegrationTest extends AbstractIntegrationTest {
@@ -43,6 +43,10 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
     void createUser_ThenGetUser_Success() {
         // Create User
         UserRequestDTO userRequest = createUserRequestDTO();
+
+        // Используйте уникальный email для каждого теста
+        String uniqueEmail = "integration.test." + System.currentTimeMillis() + "@example.com";
+        userRequest.setEmail(uniqueEmail);
 
         ResponseEntity<UserResponseDTO> createResponse = restTemplate.postForEntity(
                 "/api/v1/users",

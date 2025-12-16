@@ -83,19 +83,27 @@ public class PaymentCardService {
         }
 
         PaymentCard card = paymentCardMapper.toEntity(cardDTO);
+        card.setUser(user);
 
         try {
-
             user.addPaymentCard(card);
         } catch (IllegalStateException e) {
             throw new BusinessRuleException(e.getMessage());
         }
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        log.info("Created payment card with ID: {}", card.getId());
+        PaymentCard savedCard = savedUser.getPaymentCards().stream()
+                .filter(c -> c.getNumber().equals(cardDTO.getNumber()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("Failed to find created card"));
 
-        return paymentCardMapper.toResponseDTO(card);
+        userRepository.flush();
+
+        log.info("Created payment card with ID: {}, createdAt: {}, updatedAt: {}",
+                savedCard.getId(), savedCard.getCreatedAt(), savedCard.getUpdatedAt());
+
+        return paymentCardMapper.toResponseDTO(savedCard);
     }
 
     @CacheEvict(value = "users", key = "#cardDTO.userId")
