@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-payment-cards-table
+      author: Anna Gaikovich
+      changes:
+        - createTable:
+            tableName: payment_cards
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payment_cards_user_id
+                    references: users(id)
+              - column:
+                  name: number
+                  type: VARCHAR(19)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: holder
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiration_date
+                  type: VARCHAR(7)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValue: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_user_id
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_number
+            columns:
+              - column:
+                  name: number
+        - createIndex:
+            tableName: payment_cards
+            indexName: idx_payment_cards_active
+            columns:
+              - column:
+                  name: active
