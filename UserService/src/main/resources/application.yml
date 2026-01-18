@@ -1,0 +1,214 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: user-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+    enabled: true
+
+app:
+    jwt:
+      public-key: classpath:keys/public.pem
+      issuer: auth-service
+
+internal:
+  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
+
+---
+# Local Profile (for development)
+spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  config:
+    activate:
+      on-profile: local
+  datasource:
+      url: ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:123456}
+      driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        show_sql: ${SHOW_SQL:false}
+        format_sql: ${FORMAT_SQL:true}
+    show-sql: ${SHOW_SQL:false}
+  liquibase:
+      change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+      enabled: ${LIQUIBASE_ENABLED:true}
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 min
+
+management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics
+        base-path: /actuator
+    endpoint:
+      health:
+        probes:
+          enabled: true
+        show-details: always
+    security:
+      enabled: false
+    health:
+      livenessState:
+        enabled: true
+      readinessState:
+        enabled: true
+
+# JWT Configuration
+app:
+  jwt:
+    public-key: classpath:keys/public.pem
+    issuer: auth-service
+
+internal:
+  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.example.userservice: DEBUG
+    org.hibernate.SQL: ${LOG_SQL:DEBUG}
+
+---
+# Docker Profile (for containerization)
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url:  ${DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        show_sql: ${SHOW_SQL:false}
+        format_sql: ${FORMAT_SQL:true}
+    show-sql: ${SHOW_SQL:false}
+  liquibase:
+    change-log: ${LIQUIBASE_CHANGE_LOG:classpath:/db/changelog/db.changelog-master.yaml}
+    enabled: ${LIQUIBASE_ENABLED:true}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password:
+      timeout: 60000
+
+  cache:
+      type: redis
+      redis:
+        time-to-live: 600000 # 10 мин
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# JWT Configuration
+app:
+  jwt:
+    public-key: file:/app/keys/public.pem
+    issuer: auth-service
+
+internal:
+  api-key: ${USER_SERVICE_API_KEY:internal-auth-key-12345}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.userservice: INFO
+    org.hibernate.SQL: WARN
+
+---
+# Kubernetes Profile
+spring:
+  config:
+    activate:
+      on-profile: kubernetes
+  datasource:
+    url: jdbc:postgresql://postgres-service:5432/user_service_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+  data:
+    redis:
+      host: redis-service
+      port: 6379
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.userservice: INFO
+
+app:
+  jwt:
+    public-key: file:/app/keys/public.pem
+
