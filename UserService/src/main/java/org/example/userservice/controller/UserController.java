@@ -137,4 +137,17 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
+
+    @Operation(summary = "Check if user exists", description = "Checks if a user with the specified ID exists")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User exists check completed"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/{userId}/exists")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<Boolean> existsById(
+            @Parameter(description = "ID of the user to check") @PathVariable Long userId) {
+        boolean exists = userService.existsById(userId);
+        return ResponseEntity.ok(exists);
+    }
 }

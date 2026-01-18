@@ -2,7 +2,7 @@ spring:
   profiles:
     active: local
   application:
-    name: UserService
+    name: user-service
 
 springdoc:
   api-docs:
@@ -22,6 +22,9 @@ internal:
 ---
 # Local Profile (for development)
 spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false
   config:
     activate:
       on-profile: local
@@ -59,12 +62,20 @@ management:
     endpoints:
       web:
         exposure:
-          include: health,info
+          include: health,info,metrics
+        base-path: /actuator
     endpoint:
       health:
+        probes:
+          enabled: true
         show-details: always
     security:
       enabled: false
+    health:
+      livenessState:
+        enabled: true
+      readinessState:
+        enabled: true
 
 # JWT Configuration
 app:
@@ -122,13 +133,21 @@ spring:
         time-to-live: 600000 # 10 мин
 
 management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
-    endpoint:
-      health:
-        show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
 
 # JWT Configuration
 app:
@@ -146,4 +165,50 @@ logging:
   level:
     com.example.userservice: INFO
     org.hibernate.SQL: WARN
+
+---
+# Kubernetes Profile
+spring:
+  config:
+    activate:
+      on-profile: kubernetes
+  datasource:
+    url: jdbc:postgresql://postgres-service:5432/user_service_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+  data:
+    redis:
+      host: redis-service
+      port: 6379
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.userservice: INFO
+
+app:
+  jwt:
+    public-key: file:/app/keys/public.pem
 

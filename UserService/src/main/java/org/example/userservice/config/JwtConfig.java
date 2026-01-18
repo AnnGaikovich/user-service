@@ -11,7 +11,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 @Configuration
-public class JwtConfig {
+public class
+JwtConfig {
 
     @Value("${app.jwt.public-key:classpath:keys/public.key}")
     private Resource publicKeyResource;

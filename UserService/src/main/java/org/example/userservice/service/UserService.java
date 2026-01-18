@@ -143,4 +143,9 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(user);
     }
+
+    @Transactional(readOnly = true)
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
 }
