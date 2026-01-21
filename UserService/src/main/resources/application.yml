@@ -59,22 +59,41 @@ spring:
       time-to-live: 600000  # 10 min
 
 management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,metrics
-        base-path: /actuator
-    endpoint:
-      health:
-        probes:
-          enabled: true
-        show-details: always
-    security:
-      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
     health:
-      livenessState:
+      probes:
         enabled: true
-      readinessState:
+      show-details: always
+  security:
+    enabled: false
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    tags:
+      application: user-service
+
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
+
+#Micrometer for Prometheus
+micrometer:
+  tracing:
+    enabled: true
+  metrics:
+    export:
+      prometheus:
         enabled: true
 
 # JWT Configuration
@@ -93,6 +112,9 @@ logging:
   level:
     org.example.userservice: DEBUG
     org.hibernate.SQL: ${LOG_SQL:DEBUG}
+    org.springframework.web: DEBUG
+  pattern:
+    level: "%5p [user-service,%X{traceId:-},%X{spanId:-}]"
 
 ---
 # Docker Profile (for containerization)
@@ -136,7 +158,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus  # Добавлен prometheus
       base-path: /actuator
   endpoint:
     health:
@@ -148,6 +170,15 @@ management:
       enabled: true
     readinessState:
       enabled: true
+  metrics:
+    tags:
+      application: user-service
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
 
 # JWT Configuration
 app:
@@ -200,6 +231,15 @@ management:
       enabled: true
     readinessState:
       enabled: true
+  metrics:
+    tags:
+      application: user-service
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
 
 server:
   port: 8080
