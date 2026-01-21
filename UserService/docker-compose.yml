@@ -1,0 +1,141 @@
+services:
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-service-postgres
+    environment:
+      POSTGRES_DB: user_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: user-service-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: user-service-application
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - INTERNAL_API_KEY=internal-auth-key-12345
+      - SERVER_PORT=8080
+      - APPLICATION_NAME=UserService
+      - DB_URL=jdbc:postgresql://user-db:5432/user_service_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=123456
+      - DB_DRIVER=org.postgresql.Driver
+      - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - SHOW_SQL=false
+      - FORMAT_SQL=true
+      - SPRING_LIQUIBASE_ENABLED=true
+      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:/db/changelog/db.changelog-master.yaml
+      - LOG_SQL=DEBUG
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=30000
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+    volumes:
+      - ./src/main/resources/keys:/app/keys
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: user-service-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: user-service-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.2.2
+    container_name: user-service-tempo
+    ports:
+      - "3200:80"
+      - "4317:4317"
+      - "4318:4318"
+    command:
+      - "--storage.trace.backend=local"
+      - "--storage.trace.local.path=/tmp/tempo/blocks"
+      - "--storage.trace.wal.path=/tmp/tempo/wal"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: user-service-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    restart: unless-stopped
+
+volumes:
+  postgres_user_data:
+  prometheus_data:
+  loki_data:
+  tempo_data:
+  grafana_data:
+
+networks:
+  microservices-network:
+    driver: bridge
+  monitoring:
+    driver: bridge
+    name: user-service-monitoring
